@@ -1,0 +1,97 @@
+import org.eclipse.jetty.http2.server.HTTP2CServerConnectionFactory;
+import org.eclipse.jetty.server.*;
+import org.eclipse.jetty.server.handler.HandlerWrapper;
+import org.eclipse.jetty.server.handler.gzip.GzipHandler;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+public class JettyServerDemo {
+    public static void main(String[] args) throws Exception {
+        try (JettyStarter starter = new JettyStarter();) {
+            starter.start();
+            System.out.println("Press any key to stop Jetty.");
+            System.in.read();
+        }
+    }
+
+    public static class HelloWorldServlet extends HttpServlet {
+        @Override
+        protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+            resp.setContentType("text/html;charset=UTF-8");
+            resp.getWriter().append("Hello World protocol ").append(req.getProtocol());
+        }
+    }
+
+    private static class JettyStarter implements AutoCloseable {
+
+        private static final int PORT = 8080;
+        private final Server server;
+
+        JettyStarter() {
+            Server server = createServer();
+
+            HandlerWrapper servletHandler = createServletHandlerWithServlet();
+            HandlerWrapper gzipHandler = createGzipHandler();
+            gzipHandler.setHandler(servletHandler);
+            server.setHandler(gzipHandler);
+
+            this.server = server;
+        }
+
+        private Server createServer() {
+            HttpConfiguration config = createHttpConfiguration();
+            // HTTP/1.1 support.
+             HttpConnectionFactory http1 = new HttpConnectionFactory(config);
+
+            // HTTP/2 cleartext support.
+            HTTP2CServerConnectionFactory http2c = new HTTP2CServerConnectionFactory(config);
+
+            Server server = new Server();
+            server.setRequestLog(new AsyncNCSARequestLog());
+
+            ServerConnector connector = new ServerConnector(server, http1, http2c);
+            connector.setPort(PORT);
+            server.addConnector(connector);
+
+            return server;
+        }
+
+        private GzipHandler createGzipHandler() {
+            GzipHandler gzipHandler = new GzipHandler();
+            gzipHandler.setIncludedPaths("/*");
+            gzipHandler.setMinGzipSize(0);
+            gzipHandler.setIncludedMimeTypes("text/plain", "text/html");
+            return gzipHandler;
+        }
+
+        private ServletContextHandler createServletHandlerWithServlet() {
+            ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
+
+            context.addServlet(HelloWorldServlet.class, "/*");
+            context.setContextPath("/hello");
+
+            return context;
+        }
+
+        private static HttpConfiguration createHttpConfiguration() {
+            HttpConfiguration config = new HttpConfiguration();
+            config.setSendXPoweredBy(false);
+            config.setSendServerVersion(false);
+            return config;
+        }
+
+        void start() throws Exception {
+            server.start();
+        }
+
+        @Override
+        public void close() throws Exception {
+            server.stop();
+        }
+
+    }
+}
