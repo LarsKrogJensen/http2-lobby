@@ -1,5 +1,9 @@
 import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.buffer.impl.BufferImpl;
 import io.vertx.core.http.HttpServerOptions;
+import io.vertx.core.streams.Pump;
+import io.vertx.core.streams.ReadStream;
 import io.vertx.ext.web.Router;
 
 public class VertxDemoServer {
@@ -8,7 +12,12 @@ public class VertxDemoServer {
         
         var router = Router.router(vertx);
         router.get("/hello").handler(routingContext -> {
-            System.out.println("Handling request on protocol: " + routingContext.request().version()); 
+            System.out.println("Handling request on protocol: " + routingContext.request().version());
+
+            ReadStream<Buffer> readStream = null;
+            Buffer b = new BufferImpl();
+            routingContext.response().write(b);
+            Pump.pump(readStream, routingContext.response());
             routingContext.response().end("Hello World on protocol " + routingContext.request().version());
         });
 
