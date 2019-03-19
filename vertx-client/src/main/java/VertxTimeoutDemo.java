@@ -3,6 +3,8 @@ import io.vertx.core.VertxOptions;
 import io.vertx.core.http.ConnectionPoolTooBusyException;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.ext.dropwizard.DropwizardMetricsOptions;
+import io.vertx.ext.dropwizard.Match;
+import io.vertx.ext.dropwizard.MatchType;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
@@ -10,7 +12,11 @@ import io.vertx.ext.web.codec.BodyCodec;
 
 public class VertxTimeoutDemo {
     public static void main(String[] args) {
-        VertxOptions vertxOptions = new VertxOptions().setMetricsOptions(new DropwizardMetricsOptions().setJmxEnabled(true));
+        VertxOptions vertxOptions = new VertxOptions()
+            .setMetricsOptions(new DropwizardMetricsOptions()
+                                   .setJmxEnabled(true)
+                                   .addMonitoredHttpServerUri(new Match().setValue(".*").setType(MatchType.REGEX))
+                                   .addMonitoredHttpClientEndpoint(new Match().setValue(".*").setType(MatchType.REGEX)));
         var vertx = Vertx.vertx(vertxOptions);
 
         startSlowServer(vertx);
@@ -33,7 +39,7 @@ public class VertxTimeoutDemo {
                 .as(BodyCodec.none())
                 .send(asyncResult -> {
                     if (asyncResult.succeeded()) {
-                        System.out.println("Response status: " + asyncResult.result().statusCode() );
+                        System.out.println("Response status: " + asyncResult.result().statusCode());
                     } else {
                         System.out.println("Opps, " + asyncResult.cause());
                         if (asyncResult.cause() instanceof ConnectionPoolTooBusyException) {
