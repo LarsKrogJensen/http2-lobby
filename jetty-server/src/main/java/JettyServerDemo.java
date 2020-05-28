@@ -9,6 +9,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+
+// jetty http2 upgrade only works with GET
+// https://stackoverflow.com/questions/55391521/curl-post-request-is-not-working-with-option-http2-but-it-works-fine-when-i-u
 public class JettyServerDemo {
     public static void main(String[] args) throws Exception {
         try (JettyStarter starter = new JettyStarter();) {
@@ -63,7 +66,7 @@ public class JettyServerDemo {
         private GzipHandler createGzipHandler() {
             GzipHandler gzipHandler = new GzipHandler();
             gzipHandler.setIncludedPaths("/*");
-            gzipHandler.setMinGzipSize(0);
+            gzipHandler.setMinGzipSize(1000);
             gzipHandler.setIncludedMimeTypes("text/plain", "text/html");
             return gzipHandler;
         }

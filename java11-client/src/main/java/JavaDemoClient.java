@@ -8,7 +8,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+// java http client does not support 'force' with prio knowledge, so it takes one request to uppgrade
 public class JavaDemoClient {
+
 
     public static void main(String[] args) {
         HttpClient client = HttpClient.newHttpClient();
@@ -24,26 +26,6 @@ public class JavaDemoClient {
         }).collect(Collectors.toList());
 
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
-//        testCovaranice();
-//        testContraVariance();
     }
 
-    public static void testCovaranice() {
-        List<? extends Number> numbers = new ArrayList<>(List.of(1.2d, 1.3d));
-
-        for (Number number : numbers) {
-            System.out.println("Number: " + number);
-        }
-    }
-
-    public static void testContraVariance() {
-        List<? super Number> numbers = new ArrayList<>();
-        numbers.addAll(List.of(1.2d, 1.3d));
-
-
-//        for (Number number : numbers) {
-//
-//        }
-
-    }
 }

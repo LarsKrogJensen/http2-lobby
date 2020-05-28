@@ -1,4 +1,5 @@
 import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpVersion;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.ext.web.codec.BodyCodec;
@@ -14,22 +15,19 @@ public class VertxDemoClient {
         var options = new WebClientOptions()
             .setConnectTimeout(10_000)
             .setMaxPoolSize(100)
-            .setMaxWaitQueueSize(100);
-//            .setIdleTimeoutUnit(TimeUnit.SECONDS)
-//            .setIdleTimeout(60)
-
-//            .setUseAlpn(true)
-//            .setProtocolVersion(HttpVersion.HTTP_2);
+            .setMaxWaitQueueSize(100)
+            .setProtocolVersion(HttpVersion.HTTP_2);
 
         var webClient = WebClient.create(vertx, options);
 
         IntStream.range(0, 10).forEach(__ -> {
             var start = currentTimeMillis();
-            webClient.getAbs("http://localhost:8080/pump")
-                .as(BodyCodec.none())
+            webClient.getAbs("http://localhost:8080/hello")
+//            webClient.getAbs("http://localhost:15030/player/api/v2019/ub/punter/dummy")
+                .as(BodyCodec.string())
                 .send(asyncResult -> {
                     if (asyncResult.succeeded()) {
-                        System.out.println("Response status: " + asyncResult.result().statusCode() + " in " + (currentTimeMillis() -start) + "ms");
+                        System.out.println("Response status: " + asyncResult.result().statusCode() + " in " + (currentTimeMillis() -start) + "ms body: " + asyncResult.result().body());
                     } else {
                         System.out.println("Opps, " + asyncResult.cause());
                     }
