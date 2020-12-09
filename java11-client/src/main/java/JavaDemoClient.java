@@ -1,10 +1,11 @@
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -12,20 +13,32 @@ import java.util.stream.IntStream;
 public class JavaDemoClient {
 
 
-    public static void main(String[] args) {
-        HttpClient client = HttpClient.newHttpClient();
+    public static void main(String[] args) throws IOException {
+        HttpClient client = HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_2)
+                .followRedirects(HttpClient.Redirect.NORMAL)
+                .build();
 
-        List<CompletableFuture<Void>> futures = IntStream.range(0, 10).boxed().map(__ -> {
+        AtomicInteger completed = new AtomicInteger();
+        IntStream.range(0, 10_000).boxed().forEach(index -> {
             var start = System.currentTimeMillis();
             HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("http://localhost:8080/pump"))
-                .build();
-            return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-//                .thenApply(HttpResponse::version)
-                .thenAccept(version -> System.out.println("Completed in " + (System.currentTimeMillis() - start) + "ms"));
-        }).collect(Collectors.toList());
+                    .uri(URI.create("http://localhost:8080/hello"))
+                    .build();
+            client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                    .whenComplete((version, exception) -> {
+                        var x = completed.incrementAndGet();
+                        if (exception != null) {
+                            System.out.println("Opps#" + index + " of " + x + " ex "  + exception.getMessage());
+                        } else {
+                            System.out.println("Completed #" + index + " of " + x + " in " + (System.currentTimeMillis() - start) + "ms");
+                        }
+                    });
+        });
 
-        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+
+
+        System.in.read();
     }
 
 }

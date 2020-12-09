@@ -12,7 +12,7 @@
     <properties>
         <java.version>11</java.version>
         <vertx.version>3.9.1</vertx.version>
-        <jetty.version>9.4.27.v20200227</jetty.version>
+        <jetty.version>9.4.35.v20201120</jetty.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
     </properties>

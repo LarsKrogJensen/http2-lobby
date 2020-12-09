@@ -13,25 +13,26 @@ public class VertxDemoClient {
         var vertx = Vertx.vertx();
 
         var options = new WebClientOptions()
-            .setConnectTimeout(10_000)
-            .setMaxPoolSize(100)
-            .setMaxWaitQueueSize(100)
-            .setProtocolVersion(HttpVersion.HTTP_2);
+                .setConnectTimeout(10_000)
+                .setMaxPoolSize(100)
+                .setHttp2MaxPoolSize(100)
+                .setMaxWaitQueueSize(10_000)
+                .setProtocolVersion(HttpVersion.HTTP_2);
 
         var webClient = WebClient.create(vertx, options);
 
-        IntStream.range(0, 10).forEach(__ -> {
+        IntStream.range(0, 10_000).forEach(i -> {
             var start = currentTimeMillis();
             webClient.getAbs("http://localhost:8080/hello")
 //            webClient.getAbs("http://localhost:15030/player/api/v2019/ub/punter/dummy")
-                .as(BodyCodec.string())
-                .send(asyncResult -> {
-                    if (asyncResult.succeeded()) {
-                        System.out.println("Response status: " + asyncResult.result().statusCode() + " in " + (currentTimeMillis() -start) + "ms body: " + asyncResult.result().body());
-                    } else {
-                        System.out.println("Opps, " + asyncResult.cause());
-                    }
-                });
+                    .as(BodyCodec.string())
+                    .send(asyncResult -> {
+                        if (asyncResult.succeeded()) {
+                            System.out.println("Response status: #" + i + " " + asyncResult.result().statusCode() + " in " + (currentTimeMillis() - start) + "ms body: " + asyncResult.result().body());
+                        } else {
+                            System.out.println("Opps, " + asyncResult.cause());
+                        }
+                    });
         });
 
         webClient.close();

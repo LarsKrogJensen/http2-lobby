@@ -24,6 +24,10 @@ public class JettyServerDemo {
     public static class HelloWorldServlet extends HttpServlet {
         @Override
         protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+            }
             resp.setContentType("text/html;charset=UTF-8");
             resp.getWriter().append("Hello World protocol ").append(req.getProtocol());
         }

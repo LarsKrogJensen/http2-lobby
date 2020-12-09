@@ -6,11 +6,11 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="jetty-server" />
         <module name="vertx-server" />
         <module name="java11-client" />
-        <module name="jetty-client" />
-        <module name="jetty-server" />
         <module name="vertx-client" />
+        <module name="jetty-client" />
       </profile>
     </annotationProcessing>
   </component>
