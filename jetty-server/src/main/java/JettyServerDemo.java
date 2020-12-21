@@ -1,5 +1,9 @@
 import org.eclipse.jetty.http2.server.HTTP2CServerConnectionFactory;
-import org.eclipse.jetty.server.*;
+import org.eclipse.jetty.server.AsyncNCSARequestLog;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.HandlerWrapper;
 import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -31,6 +35,13 @@ public class JettyServerDemo {
             resp.setContentType("text/html;charset=UTF-8");
             resp.getWriter().append("Hello World protocol ").append(req.getProtocol());
         }
+
+        @Override
+        protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+            resp.setContentType("text/html;charset=UTF-8");
+//            resp.getWriter().append("Hello World protocol ").append(req.getProtocol());
+            resp.setStatus(200);
+        }
     }
 
     private static class JettyStarter implements AutoCloseable {
@@ -52,10 +63,12 @@ public class JettyServerDemo {
         private Server createServer() {
             HttpConfiguration config = createHttpConfiguration();
             // HTTP/1.1 support.
-             HttpConnectionFactory http1 = new HttpConnectionFactory(config);
+            HttpConnectionFactory http1 = new HttpConnectionFactory(config);
 
             // HTTP/2 cleartext support.
             HTTP2CServerConnectionFactory http2c = new HTTP2CServerConnectionFactory(config);
+            http2c.setMaxConcurrentStreams(1024);
+//            http2c.set
 
             Server server = new Server();
             server.setRequestLog(new AsyncNCSARequestLog());
@@ -76,10 +89,10 @@ public class JettyServerDemo {
         }
 
         private ServletContextHandler createServletHandlerWithServlet() {
-            ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
+            ServletContextHandler context = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
 
             context.addServlet(HelloWorldServlet.class, "/*");
-            context.setContextPath("/hello");
+            context.setContextPath("/");
 
             return context;
         }

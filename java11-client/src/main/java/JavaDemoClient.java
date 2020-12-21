@@ -13,32 +13,59 @@ import java.util.stream.IntStream;
 public class JavaDemoClient {
 
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
+//        System.setProperty("jdk.httpclient.keepalive.timeout", "45");
         HttpClient client = HttpClient.newBuilder()
                 .version(HttpClient.Version.HTTP_2)
-                .followRedirects(HttpClient.Redirect.NORMAL)
+//                .followRedirects(HttpClient.Redirect.NORMAL)
                 .build();
 
-        AtomicInteger completed = new AtomicInteger();
-        IntStream.range(0, 10_000).boxed().forEach(index -> {
-            var start = System.currentTimeMillis();
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("http://localhost:8080/hello"))
-                    .build();
-            client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                    .whenComplete((version, exception) -> {
-                        var x = completed.incrementAndGet();
-                        if (exception != null) {
-                            System.out.println("Opps#" + index + " of " + x + " ex "  + exception.getMessage());
-                        } else {
-                            System.out.println("Completed #" + index + " of " + x + " in " + (System.currentTimeMillis() - start) + "ms");
-                        }
-                    });
-        });
+        HttpRequest get = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:8080/hello"))
+//                .version(HttpClient.Version.HTTP_1_1)
+                .build();
+        var response = client.send(get, HttpResponse.BodyHandlers.ofString());
+        System.out.println("Response  - protocol: " + response.version() + ", body: " + response.body());
 
 
 
-        System.in.read();
+        while (true) {
+            try {
+                var request = HttpRequest.newBuilder()
+                        .POST(HttpRequest.BodyPublishers.ofString("Say hi"))
+                        .uri(URI.create("http://localhost:8080/hello"))
+//                        .version(HttpClient.Version.HTTP_1_1)
+                        .build();
+                var resp = client.send(request, HttpResponse.BodyHandlers.ofString());
+                System.out.println("Response  - status: " + resp.statusCode() + ", protocol: " + resp.version() + ", body: [" + resp.body() + "]");
+            } catch (Exception e) {
+                System.out.println("Error " + e);
+            }
+            Thread.sleep(30_000);
+        }
+
+
+//        response = client.send(request, HttpResponse.BodyHandlers.ofString());
+//        System.out.println("Response  - protocol: " + response.version() + ", body: " + response.body());
+//        AtomicInteger completed = new AtomicInteger();
+//        IntStream.range(0, 10_000).boxed().forEach(index -> {
+//            var start = System.currentTimeMillis();
+//            HttpRequest request = HttpRequest.newBuilder()
+//                    .uri(URI.create("http://localhost:8080/hello"))
+//                    .build();
+//            client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+//                    .whenComplete((version, exception) -> {
+//                        var x = completed.incrementAndGet();
+//                        if (exception != null) {
+//                            System.out.println("Opps#" + index + " of " + x + " ex "  + exception.getMessage());
+//                        } else {
+//                            System.out.println("Completed #" + index + " of " + x + " in " + (System.currentTimeMillis() - start) + "ms");
+//                        }
+//                    });
+//        });
+
+
+//        System.in.read();
     }
 
 }

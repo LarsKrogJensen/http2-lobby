@@ -1,5 +1,6 @@
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpVersion;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.ext.web.codec.BodyCodec;
@@ -9,7 +10,7 @@ import java.util.stream.IntStream;
 import static java.lang.System.currentTimeMillis;
 
 public class VertxDemoClient {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         var vertx = Vertx.vertx();
 
         var options = new WebClientOptions()
@@ -17,24 +18,26 @@ public class VertxDemoClient {
                 .setMaxPoolSize(100)
                 .setHttp2MaxPoolSize(100)
                 .setMaxWaitQueueSize(10_000)
+                .setFollowRedirects(true)
                 .setProtocolVersion(HttpVersion.HTTP_2);
 
         var webClient = WebClient.create(vertx, options);
 
-        IntStream.range(0, 10_000).forEach(i -> {
+        while (true) {
             var start = currentTimeMillis();
-            webClient.getAbs("http://localhost:8080/hello")
-//            webClient.getAbs("http://localhost:15030/player/api/v2019/ub/punter/dummy")
+            webClient.postAbs("http://localhost:8080/hello")
                     .as(BodyCodec.string())
-                    .send(asyncResult -> {
+                    .sendJson(new JsonObject(), asyncResult -> {
                         if (asyncResult.succeeded()) {
-                            System.out.println("Response status: #" + i + " " + asyncResult.result().statusCode() + " in " + (currentTimeMillis() - start) + "ms body: " + asyncResult.result().body());
+                            System.out.println("Response status: " + asyncResult.result().statusCode() + " in " + (currentTimeMillis() - start) + "ms body: " + asyncResult.result().body());
                         } else {
                             System.out.println("Opps, " + asyncResult.cause());
                         }
                     });
-        });
 
-        webClient.close();
+            Thread.sleep(30_000);
+        }
+
+//        webClient.close();
     }
 }

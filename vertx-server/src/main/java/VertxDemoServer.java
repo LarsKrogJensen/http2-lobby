@@ -25,6 +25,11 @@ public class VertxDemoServer {
                     routingContext.response().end("Hello World on protocol " + routingContext.request().version());
                 });
             });
+            router.post("/hello").handler(routingContext -> {
+                System.out.println("Handling request on protocol: " + routingContext.request().version());
+                routingContext.response().end("Hello World on protocol " + routingContext.request().version());
+
+            });
 
             HttpServerOptions options = new HttpServerOptions().setUseAlpn(true).setInitialSettings(new Http2Settings().setMaxConcurrentStreams(10_000));
             vertx.createHttpServer(options)
